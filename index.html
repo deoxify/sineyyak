@@ -3,31 +3,30 @@
 <head>
 	<title>SNEK</title>
 	<style>
-		body {
-			display: flex;
-			flex-direction: column;
-			overflow: hidden;
-			align-items: center;
-			background-color: #444;
-			justify-content: center;
-		}
+	body {
+		display: flex;
+		overflow: hidden;
+		align-items: center;
+		background-color: #444;
+		flex-direction: column;
+		justify-content: center;
+	}
 
-		#canvas {
-			margin-top: 0 auto;
-			box-shadow: black 5px 5px 15px;
-		}
+	#canvas {
+		margin-top: 0 auto;
+		box-shadow: black 5px 5px 15px;
+	}
 
-		#score {
-			top:0;
-			margin-top:0;
-			font-size: 32px;
-			font-weight: bold;
-			display: flex;
-			align-items: center;
-			justify-content: center;
-			color: #bbb;
-		}
-
+	#score {
+		top: 0;
+		color: #ccc;
+		display: flex;
+		font-size: 32px;
+		margin-top: 16px;
+		align-items: center;
+		font-family: "Impact";
+		justify-content: center;
+	}
 	</style>
 </head>
 
@@ -35,198 +34,203 @@
 	<canvas id="canvas" width="480" height="480"></canvas>
 	<p id="score"></p>
 	<script defer>
-		const canvas = document.getElementById("canvas");
-		const ctx = canvas.getContext("2d");
+	const canvas = document.getElementById("canvas");
+	const ctx = canvas.getContext("2d");
 
-		const cfg = {
-			bgColor 		: "#202020",
-			headColor 		: "#5eba7d",
-			tailColor 		: "#4f805c",
-			foodColor 		: "#c25928",
-			speed			: 10
+	const cfg = {
+		bgColor: "#202020",
+		headColor: "#5eba7d",
+		tailColor: "#4f805c",
+		foodColor: "#c25928",
+		speed: 10
 
-		}
+	}
 
-		const gridCount = 20;
-		const gridSize = canvas.width / gridCount;
+	const gridCount = 20;
+	const gridSize = canvas.width / gridCount;
 
-		const headPos = {
-			x: Math.floor(Math.random()*gridCount),
-			y: Math.floor(Math.random()*gridCount)
-		}
+	const headPos = {
+		x: Math.floor(Math.random() * gridCount),
+		y: Math.floor(Math.random() * gridCount)
+	}
 
-		const tails = [];
-		let tailLength = 10;
+	const tails = [];
+	let tailLength = 2;
 
-		const foodPos = {
-			x: Math.floor(Math.random()*gridCount),
-			y: Math.floor(Math.random()*gridCount)
-		}
+	const foodPos = {
+		x: Math.floor(Math.random() * gridCount),
+		y: Math.floor(Math.random() * gridCount)
+	}
 
-		let score = 0;
-		let gameOver = false;
+	let score = 0;
+	let gameOver = false;
 
-		let lastRenderTime = 0;
-		let inputDirection = { x: 0, y: 0 };
-		let lastInputDirection = inputDirection;
+	let lastRenderTime = 0;
+	let inputDirection = { x: 0, y: 0 };
+	let lastInputDirection = inputDirection;
 
-		function endGame(){
+	function endGame() {
 
-			ctx.fillStyle = "red";
-			ctx.font = "72px Impact";
-			ctx.fillText("GEYMOVIR", 100, 200)
+		ctx.textAlign = "center";
 
-			window.addEventListener("keydown", e => {
-				if(e.key == "y"){
-					window.location.href = window.location.href
-				}
-				if(e.key == "n"){
-					window.location.href = "https://https://www.youtube.com/embed/5yHVzYE87nQ?autoplay=1";
-				}
-			})
-		}
+		ctx.fillStyle = "white";
+		ctx.font = "38px Impact";
+		ctx.strokeText("Tekrar?", 241, 262);
+		ctx.strokeText("Tekrar?", 242, 262);
+		ctx.fillText("Tekrar?", 240, 260);
+
+		ctx.font = "72px Impact";
+
+		ctx.fillStyle = "purple";
+		ctx.strokeText("GEYMOVIR", 241, 201);
+		ctx.strokeText("GEYMOVIR", 242, 202);
+		ctx.fillText("GEYMOVIR", 240, 200);
 
 
-		function main(currentTime) {
+		ctx.fillStyle = "green";
+		ctx.strokeText("Y", canvas.width / 4, 341);
+		ctx.strokeText("Y", canvas.width / 4, 342);
+		ctx.fillText("Y", canvas.width / 4, 340);
 
-			if(gameOver){
-				return endGame();
+		ctx.fillStyle = "red";
+		ctx.strokeText("N", canvas.width - canvas.width / 4, 341);
+		ctx.strokeText("N", canvas.width - canvas.width / 4, 342);
+		ctx.fillText("N", canvas.width - canvas.width / 4, 340);
+
+		window.addEventListener("keydown", e => {
+			if(e.key == "y") {
+				window.location.href = window.location.href
 			}
-
-			window.requestAnimationFrame(main);
-
-			const secondsPassed = (currentTime - lastRenderTime) / 1000;
-			if (secondsPassed < 1 / cfg.speed) return;
-			lastRenderTime = currentTime;
-
-			updateSnakePos();
-			checkFoodCollision();
-			clearScreen();
-			drawFood();
-			drawSnake();
-			displayScore();
-
-		}
-
-		function displayScore(){
-			const scoreElement = document.getElementById("score");
-			scoreElement.innerHTML = score.toLocaleString();
-		}
-
-		function clearScreen(){
-			ctx.fillStyle = cfg.bgColor;
-			ctx.fillRect(0, 0, canvas.width, canvas.height);
-		}
-
-		function updateSnakePos(){
-
-			inputDirection = getInput() || inputDirection;
-
-			headPos.x += inputDirection.x;
-			headPos.y += inputDirection.y;
-
-			if (headPos.x >= gridCount) headPos.x = 0;
-			if (headPos.y >= gridCount) headPos.y = 0;
-			if (headPos.x < 0) headPos.x = gridCount - 1;
-			if (headPos.y < 0) headPos.y = gridCount - 1;
-
-			if(isGameOver()) gameOver = true;
-		}
-
-		function drawSnake(){
-
-			ctx.fillStyle = cfg.tailColor;
-			for(let i = 0; i < tails.length; i++){
-				ctx.fillRect(tails[i].x * gridSize, tails[i].y * gridSize, gridSize, gridSize);
+			if(e.key == "n") {
+				window.location.href = "https://www.youtube.com/embed/5yHVzYE87nQ?autoplay=1";
 			}
+		})
+	}
 
-			tails.push({x:headPos.x, y:headPos.y});
-			if(tails.length > tailLength) tails.shift();
+	function main(currentTime) {
 
-			ctx.fillStyle = cfg.headColor;
-			ctx.fillRect((headPos.x * gridSize), (headPos.y * gridSize), gridSize, gridSize);
-			
-		}
-
-		function isFoodNearby(){
-			return (
-				(headPos.x + 1 == foodPos.x && headPos.y == foodPos.y) ||
-				(headPos.x - 1 == foodPos.x && headPos.y == foodPos.y) ||
-				(headPos.y + 1 == foodPos.y && headPos.x == foodPos.x) ||
-				(headPos.y - 1 == foodPos.y && headPos.x == foodPos.x)
-			);
-		}
-
-		function drawFood(){
-			ctx.fillStyle = cfg.foodColor;
-			ctx.fillRect(foodPos.x * gridSize, foodPos.y * gridSize, gridSize, gridSize)
-		}
-
-		function checkFoodCollision(){
-			if(headPos.x == foodPos.x && headPos.y == foodPos.y){
-				updateFoodPos();
-				tailLength++;
-				score+=50;
-			}
-		}
-
-		function isGameOver(){
-			if(inputDirection.x == 0 && inputDirection.y == 0) return false;
-			/*for(let i=0; i < tails.length; i++){
-				let part = tails[i];
-				if(part.x == headPos.x && part.y == headPos.y){
-					return true;
-				}
-			}*/
-			return tails.some(part => headPos.x == part.x && headPos.y == part.y)
-		}
-
-		function updateFoodPos(){
-			while(isOnSnake(foodPos)){
-				foodPos.x = Math.floor(Math.random()*gridCount);
-				foodPos.y = Math.floor(Math.random()*gridCount);
-			}
-		}
-
-		function isOnSnake(pos){
-			return (
-				(headPos.x == pos.x && headPos.y == pos.y) ||
-				tails.some(part => part.x == pos.x && part.y == pos.y)
-			)
-		}
-
-		function getInput() {
-
-			window.addEventListener("keydown", e => {
-				switch (e.key) {
-					case "ArrowLeft":
-					case "a":
-						if (lastInputDirection.x != 0) return;
-						inputDirection = { x: -1, y: 0 };
-						break;
-					case "ArrowUp":
-					case "w":
-						if (lastInputDirection.y != 0) return;
-						inputDirection = { x: 0, y: -1 };
-						break;
-					case "ArrowRight":
-					case "d":
-						if (lastInputDirection.x != 0) return;
-						inputDirection = { x: 1, y: 0 };
-						break;
-					case "ArrowDown":
-					case "s":
-						if (lastInputDirection.y != 0) return;
-						inputDirection = { x: 0, y: 1 };
-						break;
-				}
-			});
-
-			lastInputDirection = inputDirection;
-			return inputDirection;
-		}
+		if(gameOver) return endGame();
 
 		window.requestAnimationFrame(main);
+
+		const secondsPassed = (currentTime - lastRenderTime) / 1000;
+		if(secondsPassed < 1 / cfg.speed) return;
+		lastRenderTime = currentTime;
+
+		updateSnakePos();
+		checkFoodCollision();
+		clearScreen();
+		drawFood();
+		drawSnake();
+		displayScore();
+
+	}
+
+	function displayScore() {
+		const scoreElement = document.getElementById("score");
+		scoreElement.innerHTML = score.toLocaleString();
+	}
+
+	function clearScreen() {
+		ctx.fillStyle = cfg.bgColor;
+		ctx.fillRect(0, 0, canvas.width, canvas.height);
+	}
+
+	function updateSnakePos() {
+
+		inputDirection = getInput() || inputDirection;
+
+		headPos.x += inputDirection.x;
+		headPos.y += inputDirection.y;
+
+		if(headPos.x >= gridCount) headPos.x = 0;
+		if(headPos.y >= gridCount) headPos.y = 0;
+		if(headPos.x < 0) headPos.x = gridCount - 1;
+		if(headPos.y < 0) headPos.y = gridCount - 1;
+
+		if(checkTailCollision()) gameOver = true;
+	}
+
+	function drawSnake() {
+
+		ctx.fillStyle = cfg.tailColor;
+		for(let i = 0; i < tails.length; i++) {
+			ctx.fillRect(tails[i].x * gridSize, tails[i].y * gridSize, gridSize, gridSize);
+		}
+
+		tails.push({ x: headPos.x, y: headPos.y });
+		if(tails.length > tailLength) tails.shift();
+
+		ctx.fillStyle = cfg.headColor;
+		ctx.fillRect((headPos.x * gridSize), (headPos.y * gridSize), gridSize, gridSize);
+
+	}
+
+	function drawFood() {
+		ctx.fillStyle = cfg.foodColor;
+		ctx.fillRect(foodPos.x * gridSize, foodPos.y * gridSize, gridSize, gridSize)
+	}
+
+	function checkFoodCollision() {
+		if(headPos.x == foodPos.x && headPos.y == foodPos.y) {
+			updateFoodPos();
+			tailLength++;
+			cfg.speed += 0.25
+			score += 1;
+		}
+	}
+
+	function checkTailCollision() {
+		if(inputDirection.x == 0 && inputDirection.y == 0) return false;
+		return tails.some(part => headPos.x == part.x && headPos.y == part.y)
+	}
+
+	function updateFoodPos() {
+		while(isOnSnake(foodPos)) {
+			foodPos.x = Math.floor(Math.random() * gridCount);
+			foodPos.y = Math.floor(Math.random() * gridCount);
+		}
+	}
+
+	function isOnSnake(pos) {
+		return (
+			(headPos.x == pos.x && headPos.y == pos.y) ||
+			tails.some(part => part.x == pos.x && part.y == pos.y)
+		)
+	}
+
+	function getInput() {
+
+		window.addEventListener("keydown", e => {
+			switch (e.key) {
+				case "ArrowLeft":
+				case "a":
+					if(lastInputDirection.x != 0) return;
+					inputDirection = { x: -1, y: 0 };
+					break;
+				case "ArrowUp":
+				case "w":
+					if(lastInputDirection.y != 0) return;
+					inputDirection = { x: 0, y: -1 };
+					break;
+				case "ArrowRight":
+				case "d":
+					if(lastInputDirection.x != 0) return;
+					inputDirection = { x: 1, y: 0 };
+					break;
+				case "ArrowDown":
+				case "s":
+					if(lastInputDirection.y != 0) return;
+					inputDirection = { x: 0, y: 1 };
+					break;
+			}
+		});
+
+		lastInputDirection = inputDirection;
+		return inputDirection;
+	}
+
+	window.requestAnimationFrame(main);
 	</script>
 </body>
 
