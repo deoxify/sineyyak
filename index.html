@@ -1,0 +1,233 @@
+<html>
+
+<head>
+	<title>SNEK</title>
+	<style>
+		body {
+			display: flex;
+			flex-direction: column;
+			overflow: hidden;
+			align-items: center;
+			background-color: #444;
+			justify-content: center;
+		}
+
+		#canvas {
+			margin-top: 0 auto;
+			box-shadow: black 5px 5px 15px;
+		}
+
+		#score {
+			top:0;
+			margin-top:0;
+			font-size: 32px;
+			font-weight: bold;
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			color: #bbb;
+		}
+
+	</style>
+</head>
+
+<body>
+	<canvas id="canvas" width="480" height="480"></canvas>
+	<p id="score"></p>
+	<script defer>
+		const canvas = document.getElementById("canvas");
+		const ctx = canvas.getContext("2d");
+
+		const cfg = {
+			bgColor 		: "#202020",
+			headColor 		: "#5eba7d",
+			tailColor 		: "#4f805c",
+			foodColor 		: "#c25928",
+			speed			: 10
+
+		}
+
+		const gridCount = 20;
+		const gridSize = canvas.width / gridCount;
+
+		const headPos = {
+			x: Math.floor(Math.random()*gridCount),
+			y: Math.floor(Math.random()*gridCount)
+		}
+
+		const tails = [];
+		let tailLength = 10;
+
+		const foodPos = {
+			x: Math.floor(Math.random()*gridCount),
+			y: Math.floor(Math.random()*gridCount)
+		}
+
+		let score = 0;
+		let gameOver = false;
+
+		let lastRenderTime = 0;
+		let inputDirection = { x: 0, y: 0 };
+		let lastInputDirection = inputDirection;
+
+		function endGame(){
+
+			ctx.fillStyle = "red";
+			ctx.font = "72px Impact";
+			ctx.fillText("GEYMOVIR", 100, 200)
+
+			window.addEventListener("keydown", e => {
+				if(e.key == "y"){
+					window.location.href = window.location.href
+				}
+				if(e.key == "n"){
+					window.location.href = "https://https://www.youtube.com/embed/5yHVzYE87nQ?autoplay=1";
+				}
+			})
+		}
+
+
+		function main(currentTime) {
+
+			if(gameOver){
+				return endGame();
+			}
+
+			window.requestAnimationFrame(main);
+
+			const secondsPassed = (currentTime - lastRenderTime) / 1000;
+			if (secondsPassed < 1 / cfg.speed) return;
+			lastRenderTime = currentTime;
+
+			updateSnakePos();
+			checkFoodCollision();
+			clearScreen();
+			drawFood();
+			drawSnake();
+			displayScore();
+
+		}
+
+		function displayScore(){
+			const scoreElement = document.getElementById("score");
+			scoreElement.innerHTML = score.toLocaleString();
+		}
+
+		function clearScreen(){
+			ctx.fillStyle = cfg.bgColor;
+			ctx.fillRect(0, 0, canvas.width, canvas.height);
+		}
+
+		function updateSnakePos(){
+
+			inputDirection = getInput() || inputDirection;
+
+			headPos.x += inputDirection.x;
+			headPos.y += inputDirection.y;
+
+			if (headPos.x >= gridCount) headPos.x = 0;
+			if (headPos.y >= gridCount) headPos.y = 0;
+			if (headPos.x < 0) headPos.x = gridCount - 1;
+			if (headPos.y < 0) headPos.y = gridCount - 1;
+
+			if(isGameOver()) gameOver = true;
+		}
+
+		function drawSnake(){
+
+			ctx.fillStyle = cfg.tailColor;
+			for(let i = 0; i < tails.length; i++){
+				ctx.fillRect(tails[i].x * gridSize, tails[i].y * gridSize, gridSize, gridSize);
+			}
+
+			tails.push({x:headPos.x, y:headPos.y});
+			if(tails.length > tailLength) tails.shift();
+
+			ctx.fillStyle = cfg.headColor;
+			ctx.fillRect((headPos.x * gridSize), (headPos.y * gridSize), gridSize, gridSize);
+			
+		}
+
+		function isFoodNearby(){
+			return (
+				(headPos.x + 1 == foodPos.x && headPos.y == foodPos.y) ||
+				(headPos.x - 1 == foodPos.x && headPos.y == foodPos.y) ||
+				(headPos.y + 1 == foodPos.y && headPos.x == foodPos.x) ||
+				(headPos.y - 1 == foodPos.y && headPos.x == foodPos.x)
+			);
+		}
+
+		function drawFood(){
+			ctx.fillStyle = cfg.foodColor;
+			ctx.fillRect(foodPos.x * gridSize, foodPos.y * gridSize, gridSize, gridSize)
+		}
+
+		function checkFoodCollision(){
+			if(headPos.x == foodPos.x && headPos.y == foodPos.y){
+				updateFoodPos();
+				tailLength++;
+				score+=50;
+			}
+		}
+
+		function isGameOver(){
+			if(inputDirection.x == 0 && inputDirection.y == 0) return false;
+			/*for(let i=0; i < tails.length; i++){
+				let part = tails[i];
+				if(part.x == headPos.x && part.y == headPos.y){
+					return true;
+				}
+			}*/
+			return tails.some(part => headPos.x == part.x && headPos.y == part.y)
+		}
+
+		function updateFoodPos(){
+			while(isOnSnake(foodPos)){
+				foodPos.x = Math.floor(Math.random()*gridCount);
+				foodPos.y = Math.floor(Math.random()*gridCount);
+			}
+		}
+
+		function isOnSnake(pos){
+			return (
+				(headPos.x == pos.x && headPos.y == pos.y) ||
+				tails.some(part => part.x == pos.x && part.y == pos.y)
+			)
+		}
+
+		function getInput() {
+
+			window.addEventListener("keydown", e => {
+				switch (e.key) {
+					case "ArrowLeft":
+					case "a":
+						if (lastInputDirection.x != 0) return;
+						inputDirection = { x: -1, y: 0 };
+						break;
+					case "ArrowUp":
+					case "w":
+						if (lastInputDirection.y != 0) return;
+						inputDirection = { x: 0, y: -1 };
+						break;
+					case "ArrowRight":
+					case "d":
+						if (lastInputDirection.x != 0) return;
+						inputDirection = { x: 1, y: 0 };
+						break;
+					case "ArrowDown":
+					case "s":
+						if (lastInputDirection.y != 0) return;
+						inputDirection = { x: 0, y: 1 };
+						break;
+				}
+			});
+
+			lastInputDirection = inputDirection;
+			return inputDirection;
+		}
+
+		window.requestAnimationFrame(main);
+	</script>
+</body>
+
+</html>
