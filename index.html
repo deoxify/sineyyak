@@ -1,7 +1,8 @@
 <html>
 
 <head>
-	<title>SNEK</title>
+	<title>Sineyyak</title>
+	<link rel="icon" type="image/x-icon" href="https://emojipedia-us.s3.dualstack.us-west-1.amazonaws.com/thumbs/120/microsoft/310/eggplant_1f346.png">
 	<style>
 	body {
 		display: flex;
@@ -35,18 +36,19 @@
 	<p id="score"></p>
 	<script defer>
 	const canvas = document.getElementById("canvas");
+
 	const ctx = canvas.getContext("2d");
 
 	const cfg = {
-		bgColor: "#202020",
+		bgColor  : "#202020",
 		headColor: "#5eba7d",
 		tailColor: "#4f805c",
 		foodColor: "#c25928",
+		gridCount: 20,
 		speed: 10
-
 	}
 
-	const gridCount = 20;
+	const gridCount = cfg.gridCount;
 	const gridSize = canvas.width / gridCount;
 
 	const headPos = {
@@ -62,12 +64,16 @@
 		y: Math.floor(Math.random() * gridCount)
 	}
 
+	let foodAngle = 0;
+
 	let score = 0;
 	let gameOver = false;
 
 	let lastRenderTime = 0;
 	let inputDirection = { x: 0, y: 0 };
 	let lastInputDirection = inputDirection;
+	let lastEatPos = { x: null, y: null };
+	let animState = 2;
 
 	function endGame() {
 
@@ -81,7 +87,7 @@
 
 		ctx.font = "72px Impact";
 
-		ctx.fillStyle = "purple";
+		ctx.fillStyle = "black";
 		ctx.strokeText("GEYMOVIR", 241, 201);
 		ctx.strokeText("GEYMOVIR", 242, 202);
 		ctx.fillText("GEYMOVIR", 240, 200);
@@ -107,6 +113,24 @@
 		})
 	}
 
+	const foodImg = new Image();
+	const pickUpSfx = new Audio();
+	let isAnimReady = false;
+
+	function init() {
+
+		ctx.shadowOffsetX = 0;
+		ctx.shadowOffsetY = 0;
+		ctx.shadowColor = "black";
+
+		foodImg.src = "https://emojipedia-us.s3.dualstack.us-west-1.amazonaws.com/thumbs/120/microsoft/310/eggplant_1f346.png";
+		pickUpSfx.src = "https://freesound.org/data/previews/270/270343_5123851-lq.mp3";
+
+		displayScore();
+
+		window.requestAnimationFrame(main);
+	}
+
 	function main(currentTime) {
 
 		if(gameOver) return endGame();
@@ -120,15 +144,10 @@
 		updateSnakePos();
 		checkFoodCollision();
 		clearScreen();
-		drawFood();
+		animateEat();
 		drawSnake();
-		displayScore();
+		drawFood();
 
-	}
-
-	function displayScore() {
-		const scoreElement = document.getElementById("score");
-		scoreElement.innerHTML = score.toLocaleString();
 	}
 
 	function clearScreen() {
@@ -136,10 +155,13 @@
 		ctx.fillRect(0, 0, canvas.width, canvas.height);
 	}
 
+	function displayScore() {
+		const scoreElement = document.getElementById("score");
+		scoreElement.innerHTML = score.toLocaleString();
+	}
+
 	function updateSnakePos() {
-
 		inputDirection = getInput() || inputDirection;
-
 		headPos.x += inputDirection.x;
 		headPos.y += inputDirection.y;
 
@@ -152,7 +174,7 @@
 	}
 
 	function drawSnake() {
-
+		ctx.shadowBlur = 2;
 		ctx.fillStyle = cfg.tailColor;
 		for(let i = 0; i < tails.length; i++) {
 			ctx.fillRect(tails[i].x * gridSize, tails[i].y * gridSize, gridSize, gridSize);
@@ -161,28 +183,66 @@
 		tails.push({ x: headPos.x, y: headPos.y });
 		if(tails.length > tailLength) tails.shift();
 
+		ctx.shadowBlur = 0;
 		ctx.fillStyle = cfg.headColor;
 		ctx.fillRect((headPos.x * gridSize), (headPos.y * gridSize), gridSize, gridSize);
-
 	}
 
-	function drawFood() {
-		ctx.fillStyle = cfg.foodColor;
-		ctx.fillRect(foodPos.x * gridSize, foodPos.y * gridSize, gridSize, gridSize)
-	}
-
-	function checkFoodCollision() {
-		if(headPos.x == foodPos.x && headPos.y == foodPos.y) {
-			updateFoodPos();
-			tailLength++;
-			cfg.speed += 0.25
-			score += 1;
-		}
+	function isOnSnake(pos) {
+		return (
+			(headPos.x == pos.x && headPos.y == pos.y) ||
+			tails.some(part => part.x == pos.x && part.y == pos.y)
+		);
 	}
 
 	function checkTailCollision() {
 		if(inputDirection.x == 0 && inputDirection.y == 0) return false;
-		return tails.some(part => headPos.x == part.x && headPos.y == part.y)
+		return tails.some(part => headPos.x == part.x && headPos.y == part.y);
+	}
+
+	function drawFood() {
+		ctx.shadowBlur = 20;
+		ctx.drawImage(foodImg, foodPos.x * gridSize, foodPos.y * gridSize, gridSize, gridSize);
+		ctx.shadowBlur = 0;
+	}
+
+	function checkFoodCollision() {
+		if(headPos.x == foodPos.x && headPos.y == foodPos.y) {
+			isAnimReady = true;
+			lastEatPos.x = foodPos.x;
+			lastEatPos.y = foodPos.y;
+			pickUpSfx.play();
+			updateFoodPos();
+			tailLength++;
+			cfg.speed += cfg.speed >= 60 ? 0 : 0.25;
+			score++;
+			displayScore();
+		}
+	}
+
+	function animateEat() {
+		if(!isAnimReady || !animState) return;
+		const pos = lastEatPos;
+		const rectSize = gridSize / 2;
+		const rectCenter = gridSize / 2 - rectSize / 2;
+
+		if(animState == 2) {
+			ctx.fillStyle = "#71689888";
+			ctx.fillRect((pos.x - 1) * gridSize + rectCenter, pos.y * gridSize + rectCenter, rectSize, rectSize); //left
+			ctx.fillRect(pos.x * gridSize + rectCenter, (pos.y - 1) * gridSize + rectCenter, rectSize, rectSize); //up
+			ctx.fillRect((pos.x + 1) * gridSize + rectCenter, pos.y * gridSize + rectCenter, rectSize, rectSize); //right
+			ctx.fillRect(pos.x * gridSize + rectCenter, (pos.y + 1) * gridSize + rectCenter, rectSize, rectSize); //down
+			return animState = 1;
+
+		} else if(animState == 1) {
+			ctx.fillStyle = "#71689833";
+			ctx.fillRect((pos.x - 1) * gridSize + rectCenter, (pos.y - 1) * gridSize + rectCenter, rectSize, rectSize); //upper left
+			ctx.fillRect((pos.x + 1) * gridSize + rectCenter, (pos.y - 1) * gridSize + rectCenter, rectSize, rectSize); //upper right
+			ctx.fillRect((pos.x + 1) * gridSize + rectCenter, (pos.y + 1) * gridSize + rectCenter, rectSize, rectSize); //bottom right
+			ctx.fillRect((pos.x - 1) * gridSize + rectCenter, (pos.y + 1) * gridSize + rectCenter, rectSize, rectSize); //bottom left
+			isAnimReady = false;
+			animState = 2
+		}
 	}
 
 	function updateFoodPos() {
@@ -192,15 +252,7 @@
 		}
 	}
 
-	function isOnSnake(pos) {
-		return (
-			(headPos.x == pos.x && headPos.y == pos.y) ||
-			tails.some(part => part.x == pos.x && part.y == pos.y)
-		)
-	}
-
 	function getInput() {
-
 		window.addEventListener("keydown", e => {
 			switch (e.key) {
 				case "ArrowLeft":
@@ -230,7 +282,7 @@
 		return inputDirection;
 	}
 
-	window.requestAnimationFrame(main);
+	window.onload = init;
 	</script>
 </body>
 
