@@ -1,4 +1,5 @@
 <html>
+
 <head>
 	<title>Sineyyak</title>
 	<link rel="icon" type="image/x-icon" href="https://emojipedia-us.s3.dualstack.us-west-1.amazonaws.com/thumbs/120/microsoft/310/eggplant_1f346.png">
@@ -16,26 +17,17 @@
 		margin-top: 0 auto;
 		box-shadow: black 5px 5px 15px;
 	}
-
-	#score {
-		top: 0;
-		color: #ccc;
-		display: flex;
-		font-size: 32px;
-		margin-top: 16px;
-		align-items: center;
-		font-family: "Impact";
-		justify-content: center;
-	}
 	</style>
 </head>
 
 <body>
-	<canvas id="canvas" width="512" height="512"></canvas>
-	<p id="score"></p>
+	<!-- <canvas id="canvas" width="512" height="512"></canvas> -->
+	<canvas id="canvas"></canvas>
 	<script defer>
 	const canvas = document.getElementById("canvas");
 	const ctx = canvas.getContext("2d");
+	canvas.width = window.innerHeight - window.innerHeight / 20;
+	canvas.height = canvas.width;
 
 	const cfg = {
 		bgColor  : "#202020",
@@ -61,7 +53,7 @@
 	const foodPos = generateRandomPos();
 
 	const tails = [];
-	let tailLength = 2;
+	let tailLength = 5;
 
 	let score = 0;
 	let gameOver = false;
@@ -78,11 +70,11 @@
 		foodImg.src = "https://emojipedia-us.s3.dualstack.us-west-1.amazonaws.com/thumbs/120/microsoft/310/eggplant_1f346.png";
 		eatSfx.src = "https://freesound.org/data/previews/270/270343_5123851-lq.mp3";
 
+		ctx.textAlign = "center";
 		ctx.shadowOffsetX = 0;
 		ctx.shadowOffsetY = 0;
 		ctx.shadowColor = "black";
 
-		displayScore();
 		window.requestAnimationFrame(main);
 	}
 
@@ -99,6 +91,7 @@
 		checkFoodCollision();
 		clearScreen();
 		animateEat();
+		displayScore();
 		drawSnake();
 		drawFood();
 
@@ -109,9 +102,13 @@
 		ctx.fillRect(0, 0, canvas.width, canvas.height);
 	}
 
-	function displayScore() {
-		const scoreElement = document.getElementById("score");
-		scoreElement.innerHTML = score.toLocaleString();
+	function displayScore(state = "normal") {
+		const fontSize = canvas.height / 3;
+		ctx.shadowBlur = 5;
+		ctx.fillStyle = state == "end" ? "#ffffffa0" : "#ffffff10";
+		ctx.font = String(fontSize) + "px Impact";
+		ctx.fillText(score, canvas.width / 2, canvas.height - fontSize / 4);
+		ctx.shadowBlur = 0;
 	}
 
 	function updateSnakePos() {
@@ -153,35 +150,33 @@
 		if(inputDirection.x == 0 && inputDirection.y == 0) return false;
 		return tails.some(part => headPos.x == part.x && headPos.y == part.y);
 	}
+
+	function drawTextWithShadow(text, color, font, thickness, x, y){
+		ctx.font = font;
+		ctx.fillStyle = color;
+
+		ctx.strokeText(text, x - 0.5, y - 0.5);
+
+		for(let i = thickness; i > 0; i--){
+			ctx.strokeText(text, x + i, y + i / 2);
+		}
+
+		ctx.fillText(text, x, y);
+	}
 		
 	function endGame() {
 		const centerW = canvas.width/2;
 		const centerH = canvas.height/2;
 
-		ctx.textAlign = "center";
+		ctx.fillStyle = "#151515cc"
+		ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-		ctx.fillStyle = "white";
-		ctx.font = "38px Impact";
-		ctx.strokeText("Tekrar?", centerW + 2, 262);
-		ctx.strokeText("Tekrar?", centerW + 1, 261);
-		ctx.fillText("Tekrar?", centerW, 260);
+		displayScore("end");
 
-		ctx.font = "72px Impact";
-
-		ctx.fillStyle = "black";
-		ctx.strokeText("GEYMOVIR", centerW + 2, 202);
-		ctx.strokeText("GEYMOVIR", centerW + 1, 201);
-		ctx.fillText("GEYMOVIR", centerW, 200);
-
-		ctx.fillStyle = "green";
-		ctx.strokeText("Y", centerW / 2 + 2, 342);
-		ctx.strokeText("Y", centerW / 2 + 1, 341);
-		ctx.fillText("Y", centerW / 2, 340);
-
-		ctx.fillStyle = "red";
-		ctx.strokeText("N", canvas.width - centerW / 2 + 2, 342);
-		ctx.strokeText("N", canvas.width - centerW / 2 + 1, 341);
-		ctx.fillText("N", canvas.width - centerW / 2, 340);
+		drawTextWithShadow("GEYMOVIR", "orange", "72px Impact", 5, centerW, centerH / 2 + 36);
+		drawTextWithShadow("Tekrar ??", "white", "38px Impact", 5, centerW, centerH + 19);
+		drawTextWithShadow("Y", "green", "72px Impact", 5, centerW / 2, centerH + centerH / 2 + 36);
+		drawTextWithShadow("N", "red", "72px Impact", 5, canvas.width - centerW / 2, canvas.height - centerH / 2 + 36);
 
 		window.addEventListener("keydown", e => {
 			if(e.key == "y") window.location.href = window.location.href;
@@ -190,7 +185,7 @@
 	}
 
 	function drawFood() {
-		ctx.shadowBlur = 20;
+		ctx.shadowBlur = 10;
 		ctx.drawImage(foodImg, foodPos.x * gridSize, foodPos.y * gridSize, gridSize, gridSize);
 		ctx.shadowBlur = 0;
 	}
@@ -205,7 +200,6 @@
 			tailLength++;
 			cfg.speed += cfg.speed >= 60 ? 0 : 0.25;
 			score++;
-			displayScore();
 		}
 	}
 
