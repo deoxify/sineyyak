@@ -21,16 +21,16 @@
 </head>
 
 <body>
-	<!-- <canvas id="canvas" width="512" height="512"></canvas> -->
 	<canvas id="canvas"></canvas>
 	<script defer>
 	const canvas = document.getElementById("canvas");
 	const ctx = canvas.getContext("2d");
+
 	canvas.width = window.innerHeight - window.innerHeight / 20;
 	canvas.height = canvas.width;
 
 	const cfg = {
-		bgColor  : "#202020",
+		bgColor: "#202020",
 		headColor: "#5eba7d",
 		tailColor: "#4f805c",
 		foodColor: "#c25928",
@@ -41,19 +41,21 @@
 	const gridCount = cfg.gridCount;
 	const gridSize = canvas.width / gridCount;
 
-	const generateRandomPos = () => { return {
-		x: Math.floor(Math.random() * gridCount),
-		y: Math.floor(Math.random() * gridCount)
-	}};
+	const generateRandomPos = () => {
+		return {
+			x: Math.floor(Math.random() * gridCount),
+			y: Math.floor(Math.random() * gridCount)
+		}
+	};
 
 	const foodImg = new Image();
 	const eatSfx = new Audio();
 
 	const headPos = generateRandomPos();
-	const foodPos = generateRandomPos();
-
 	const tails = [];
-	let tailLength = 5;
+	let tailLength = 0;
+
+	let foodPos = generateRandomPos();
 
 	let score = 0;
 	let gameOver = false;
@@ -94,7 +96,6 @@
 		displayScore();
 		drawSnake();
 		drawFood();
-
 	}
 
 	function clearScreen() {
@@ -120,7 +121,6 @@
 		if(headPos.y >= gridCount) headPos.y = 0;
 		if(headPos.x < 0) headPos.x = gridCount - 1;
 		if(headPos.y < 0) headPos.y = gridCount - 1;
-
 		if(checkTailCollision()) gameOver = true;
 	}
 
@@ -151,22 +151,19 @@
 		return tails.some(part => headPos.x == part.x && headPos.y == part.y);
 	}
 
-	function drawTextWithShadow(text, color, font, thickness, x, y){
+	function drawTextWithShadow(text, color, font, thickness, x, y) {
 		ctx.font = font;
 		ctx.fillStyle = color;
-
 		ctx.strokeText(text, x - 0.5, y - 0.5);
-
-		for(let i = thickness; i > 0; i--){
+		for(let i = thickness; i > 0; i--) {
 			ctx.strokeText(text, x + i, y + i / 2);
 		}
-
 		ctx.fillText(text, x, y);
 	}
-		
+
 	function endGame() {
-		const centerW = canvas.width/2;
-		const centerH = canvas.height/2;
+		const centerW = canvas.width / 2;
+		const centerH = canvas.height / 2;
 
 		ctx.fillStyle = "#151515cc"
 		ctx.fillRect(0, 0, canvas.width, canvas.height);
@@ -229,10 +226,7 @@
 	}
 
 	function updateFoodPos() {
-		while(isOnSnake(foodPos)) {
-			foodPos.x = Math.floor(Math.random() * gridCount);
-			foodPos.y = Math.floor(Math.random() * gridCount);
-		}
+		while(isOnSnake(foodPos)) foodPos = generateRandomPos();
 	}
 
 	function getInput() {
