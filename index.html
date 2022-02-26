@@ -182,9 +182,11 @@
 	}
 
 	function drawFood() {
-		ctx.shadowBlur = 10;
+		ctx.fillStyle = cfg.foodColor;
+		/*ctx.shadowBlur = 10;
 		ctx.drawImage(foodImg, foodPos.x * gridSize, foodPos.y * gridSize, gridSize, gridSize);
-		ctx.shadowBlur = 0;
+		ctx.shadowBlur = 0;*/
+		ctx.fillRect(foodPos.x * gridSize, foodPos.y * gridSize, gridSize, gridSize);
 	}
 
 	function checkFoodCollision() {
