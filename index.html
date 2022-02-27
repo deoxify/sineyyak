@@ -2,7 +2,7 @@
 
 <head>
 	<title>Sineyyak</title>
-	<link rel="icon" type="image/x-icon" href="https://emojipedia-us.s3.dualstack.us-west-1.amazonaws.com/thumbs/120/microsoft/310/eggplant_1f346.png">
+	<link rel="icon" href="https://emojipedia-us.s3.dualstack.us-west-1.amazonaws.com/thumbs/120/microsoft/310/eggplant_1f346.png">
 	<style>
 	body {
 		display: flex;
@@ -14,8 +14,7 @@
 	}
 
 	#canvas {
-		margin-top: 0 auto;
-		box-shadow: black 5px 5px 15px;
+		margin: .5%;
 	}
 	</style>
 </head>
@@ -26,7 +25,7 @@
 	const canvas = document.getElementById("canvas");
 	const ctx = canvas.getContext("2d");
 
-	canvas.width = window.innerHeight - window.innerHeight / 20;
+	canvas.width = window.innerHeight - window.innerHeight * .05;
 	canvas.height = canvas.width;
 
 	const cfg = {
