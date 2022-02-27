@@ -105,7 +105,7 @@
 	function displayScore(state = "normal") {
 		const fontSize = canvas.height / 3;
 		ctx.shadowBlur = 5;
-		ctx.fillStyle = state == "end" ? "#ffffffa0" : "#ffffff10";
+		ctx.fillStyle = state == "end" ? "#ffffffa0" : "#ffffff05";
 		ctx.font = String(fontSize) + "px Impact";
 		ctx.fillText(score, canvas.width / 2, canvas.height - fontSize / 4);
 		ctx.shadowBlur = 0;
