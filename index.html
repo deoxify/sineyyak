@@ -1,35 +1,38 @@
 <html>
-
 <head>
 	<title>Sineyyak</title>
 	<link rel="icon" href="https://emojipedia-us.s3.dualstack.us-west-1.amazonaws.com/thumbs/120/microsoft/310/eggplant_1f346.png">
 	<style>
+	* {
+		margin: 0;
+		padding: 0;
+		box-sizing: border-box;
+	}
 	body {
 		display: flex;
-		overflow: hidden;
+		justify-content: center;
 		align-items: center;
 		background-color: #444;
-		flex-direction: column;
-		justify-content: center;
 	}
 
 	#canvas {
 		margin: .5%;
+		border: 5px ridge black;
 	}
 	</style>
 </head>
-
 <body>
 	<canvas id="canvas"></canvas>
 	<script defer>
 	const canvas = document.getElementById("canvas");
 	const ctx = canvas.getContext("2d");
 
-	canvas.width = window.innerHeight - window.innerHeight * .05;
-	canvas.height = canvas.width;
+	canvas.width = canvas.height = Math.min(
+		window.innerHeight - window.innerHeight * 0.05, window.innerWidth - window.innerWidth * 0.05
+	);
 
 	const cfg = {
-		bgColor: "#202020",
+		bgColor: "#202020cf", //minimal alpha for trail effect
 		headColor: "#5eba7d",
 		tailColor: "#4f805c",
 		foodColor: "#c25928",
@@ -263,5 +266,4 @@
 	window.onload = init;
 	</script>
 </body>
-
 </html>
